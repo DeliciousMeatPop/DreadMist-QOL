@@ -18,3 +18,8 @@ Every finding is tagged VERIFIED (seen in current build) or ASSUMED.
 
 ## Still needed
 Contents of: Perks XML (cost/requirements), StatEffects\Sanity XML, a Dialogue Tree + a Cloth trader package, `_DevTest.xml`, and the command methods in Assembly-CSharp.dll (via ILSpy/dnSpy or `tools/inspect_install.py` output).
+
+## Progress
+- Steps 1-2 done (docs/FINDINGS.md, docs/COMMANDS.md).
+- Step 3: plugin skeleton + cheat panel written (src/DreadMistQOL), type-checked only against stand-in stubs; not built against the real DLLs or run in game.
+- Next: perk points/costs (patch PerksWindowUI.Refresh + PerkUpgradeEntryUI tooltip), dialogue Shift filter, sanity breakdown, trade 'Item Invalid' reasons.
