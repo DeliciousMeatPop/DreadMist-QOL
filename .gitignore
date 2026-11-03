@@ -1,0 +1,14 @@
+# Local inspection output and any game material must never be committed
+inspection/
+game_files/
+*.dll
+!tools/*.dll
+*.assets
+*.resS
+*.bundle
+*.pdb
+*.log
+__pycache__/
+bin/
+obj/
+dist/
