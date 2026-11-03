@@ -29,6 +29,11 @@ WANTED = [
     "StatEffectInstance", "SentientStatEffectContainer", "StatModifiers",
     "StatEffectUI", "StatEffectScrollListUI", "StatEffectsGridUI", "EntityActiveStatsUI",
     "CharacterStatsWindowUI", "StatsElementUI", "DialogueActionSanity",
+    "DialogueResponse", "DialogueNode", "DialogueTreeDefinition", "DialoguePackageDefinition",
+    "DialogueBranch", "IntButtonTypedController", "AttributeData", "SkillData", "SentientLevelData",
+    "EntitySentientPlayerData", "ResourceManager", "ItemDefinition", "ItemListDefinition",
+    "PlayerManager", "PlayerController", "BaseWindowUI", "GameHUD", "Localizer", "StatEffectValue",
+    "StatEffectDefinition", "NPC_Controller", "ItemData", "InfoDisplayUI",
     "ItemEquipmentData", "InventoryHumanoidData", "ItemContextMenuUI", "HoverToolTipUI",
 ]
 
