@@ -3,6 +3,7 @@ using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using HarmonyLib;
 using UnityEngine;
 
 namespace DreadMistQOL
@@ -21,6 +22,12 @@ namespace DreadMistQOL
         internal static ManualLogSource Log;
         internal static ConfigEntry<bool> EnableCheatPanel;
         internal static ConfigEntry<KeyboardShortcut> CheatPanelHotkey;
+        internal static ConfigEntry<bool> FilterDialogue;
+        internal static ConfigEntry<RevealModifier> DialogueRevealKey;
+
+        internal enum RevealModifier { Shift, Control, Alt }
+
+        private bool _legacyInputOk = true;
 
         private CheatPanel _cheats;
         private bool _cheatsOpen;
@@ -41,7 +48,23 @@ namespace DreadMistQOL
                 "Key that shows/hides the cheat panel. Examples: F8, LeftControl + F8. " +
                 "Only works when EnableCheatPanel = true.");
 
+            FilterDialogue = Config.Bind(
+                "Dialogue", "HideUnavailableChoices", true,
+                "When true, conversations only show choices you can do right now. " +
+                "Hold the reveal key to show every choice together with its requirements. " +
+                "Presentation only: requirements are never bypassed.");
+
+            DialogueRevealKey = Config.Bind(
+                "Dialogue", "RevealKey", RevealModifier.Shift,
+                "Key to hold to reveal unavailable choices. One of: Shift, Control, Alt.");
+
             _cheats = new CheatPanel();
+
+            if (FilterDialogue.Value)
+            {
+                try { DialogueFilter.Install(new Harmony(Guid)); }
+                catch (Exception e) { Log.LogError("Could not install the dialogue filter: " + e); }
+            }
 
             Log.LogInfo(Name + " " + Version + " loaded. Unity " + Application.unityVersion +
                         ". Config file: " + Config.ConfigFilePath);
@@ -55,6 +78,8 @@ namespace DreadMistQOL
             try
             {
                 HandleHotkey();
+                if (FilterDialogue.Value && Event.current != null)
+                    DialogueFilter.UpdateReveal(RevealHeld(Event.current));
 
                 if (_cheatsOpen && EnableCheatPanel.Value)
                     _cheats.Draw();
@@ -96,6 +121,27 @@ namespace DreadMistQOL
                 Log.LogInfo("Cheat panel " + (_cheatsOpen ? "opened" : "closed"));
             }
             e.Use();
+        }
+
+        private bool RevealHeld(Event e)
+        {
+            KeyCode left, right;
+            bool fromEvent;
+            switch (DialogueRevealKey.Value)
+            {
+                case RevealModifier.Control: left = KeyCode.LeftControl; right = KeyCode.RightControl; fromEvent = e.control; break;
+                case RevealModifier.Alt: left = KeyCode.LeftAlt; right = KeyCode.RightAlt; fromEvent = e.alt; break;
+                default: left = KeyCode.LeftShift; right = KeyCode.RightShift; fromEvent = e.shift; break;
+            }
+            if (fromEvent) return true;
+
+            // Fallback in case the event doesn't carry modifiers; disabled if the legacy Input API isn't available.
+            if (_legacyInputOk)
+            {
+                try { return Input.GetKey(left) || Input.GetKey(right); }
+                catch { _legacyInputOk = false; Log.LogInfo("Legacy Input API unavailable; using GUI events for the reveal key."); }
+            }
+            return false;
         }
 
         private static bool ModifierHeld(Event e, KeyCode m)

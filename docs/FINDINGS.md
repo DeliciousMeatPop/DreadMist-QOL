@@ -88,6 +88,11 @@ Run `tools/decompile_key_classes.py` and send `inspection/decompiled_selected.zi
 
 ## Update 3: clothing is a *discoverability* problem (user, in-game)
 - User: buying clothes isn't failing; they can't find anyone selling them in town.
-- Data shows clothing sellers exist in the file listing: dialogue packages `TraderClothing_Nara` (character `NPC_NaraSouster`) and `TraderCloth_Jaquette` (`NPC_Jaquette`); shop lists `Shop_Store_Clothing`, `Shop_ClothesSimple`, `Shop_Market_Cloth`; item filters `Shop_Clothing`, `Shop_Cloth`. A `Tailor_Francois` package sits in `ToBeRemoved`.
+- Data names two cloth-related traders: `TraderClothing_Nara` (character `NPC_NaraSouster`, likely the clothes seller) and `TraderCloth_Jaquette` (`NPC_Jaquette`). USER-CONFIRMED: Jaquette sells cloth (material) only, not clothes, matching filter `Shop_Cloth`. So Nara is the only candidate clothes seller; her location/schedule is unknown. shop lists `Shop_Store_Clothing`, `Shop_ClothesSimple`, `Shop_Market_Cloth`; item filters `Shop_Clothing`, `Shop_Cloth`. A `Tailor_Francois` package sits in `ToBeRemoved`.
 - Trading only opens if the NPC `CanTrade` AND is `NearTradingContainer` (their counter/stall). NPCs also have sleep/schedule behaviours, so a seller may be away from their stall at some times. ASSUMED; to be confirmed with the character XML.
 - Idea: a "who trades here" helper listing loaded NPCs that can trade, what they sell (their item filter / shop list), and distance/direction. Needs `NPC_Controller`, `CharacterDefinition` (Trader section) decompiled.
+
+## Dialogue filter semantics (user-defined, implemented in src/DreadMistQOL/DialogueFilter.cs)
+- Default: show only choices the player can do now. Hold Shift: show every choice with its requirements.
+- 'Can do now' = the game's requirement text for that choice has no `<color=red>` (the game marks each unmet requirement red). Limitation: an indicator the developer configured to hide itself when unmet (DisplayMode Positive) leaves no red, so such a choice still counts as available.
+- Safety: if every choice would be hidden, all are shown so a conversation can never dead-end.

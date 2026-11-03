@@ -4,8 +4,9 @@ Quality-of-life mod for **DreadMist** (Steam app 2285190, single-player; not Dre
 It is a BepInEx plugin: **no original game file is changed**, and removal is one script.
 
 Status: **0.1.0 - first working draft, not yet tested in the real game.** Included so far:
-the optional **cheat panel** (buttons for the game's console commands). Perk-point display,
-dialogue filter and sanity/clothing explanations are next (findings in `docs/FINDINGS.md`).
+the optional **cheat panel** (buttons for the game's console commands) and the **dialogue filter**
+(conversations show only choices you can do now; hold **Shift** to see all choices with their requirements;
+setting `HideUnavailableChoices`, `RevealKey`). Perk-point display and sanity/trader-finder are next (findings in `docs/FINDINGS.md`).
 
 Quality-of-life features and cheats are separate. The cheat panel is **off by default** (`EnableCheatPanel = false`).
 
@@ -45,7 +46,8 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 5. Progress tab: pick Strength, Add experience 100.
 6. Perks tab: pick Courage, pick Brave, **Give perk**.
 7. World tab: Set time to noon.
-8. Try typing in a text box: if the game also reacts to those keys (hotkeys), tell me which.
+8. Dialogue: talk to any NPC. Red/unavailable choices should be hidden; hold Shift and they appear with requirements; release and they vanish. Back/Exit must always be reachable.
+9. Try typing in a text box: if the game also reacts to those keys (hotkeys), tell me which.
 Send me `BepInEx\LogOutput.log` for any problem.
 
 ## Remove
