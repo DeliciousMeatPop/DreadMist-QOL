@@ -25,6 +25,8 @@ namespace DreadMistQOL
         internal static ConfigEntry<bool> FilterDialogue;
         internal static ConfigEntry<bool> DialogueDebug;
         internal static ConfigEntry<bool> GoldWeighsNothing;
+        internal static ConfigEntry<bool> ClearPerkDisplay;
+        internal static ConfigEntry<bool> ShowSanityDetails;
         internal static ConfigEntry<bool> ProtectLastHarvest;
         internal static ConfigEntry<RevealModifier> ForageOverrideKey;
         internal static ConfigEntry<int> RegrowDays;
@@ -84,11 +86,31 @@ namespace DreadMistQOL
                 "Foraging", "RegrowDays", 2,
                 "A partly-harvested foraged plant that is left alone regains 1 harvest every this many in-game days. 0 = off.");
 
+            ClearPerkDisplay = Config.Bind(
+                "Perks", "ClearPointDisplay", true,
+                "Perks window shows 'unspent / earned' perk points, and each perk's tooltip shows its cost (1 point) and exactly what is missing.");
+
+            ShowSanityDetails = Config.Bind(
+                "Sanity", "ShowBreakdown", true,
+                "Adds a 'Sanity details' section to the stats window: stage thresholds, constant drain and what reduces it, and effects raising or lowering sanity.");
+
             _cheats = new CheatPanel();
             var harmony = new Harmony(Guid);
 
             try { Tweaks.Install(harmony); }
             catch (Exception e) { Log.LogError("Could not install tweaks: " + e); }
+
+            if (ClearPerkDisplay.Value)
+            {
+                try { PerkDisplay.Install(harmony); }
+                catch (Exception e) { Log.LogError("Could not install perk display: " + e); }
+            }
+
+            if (ShowSanityDetails.Value)
+            {
+                try { SanityInfo.Install(harmony); }
+                catch (Exception e) { Log.LogError("Could not install sanity details: " + e); }
+            }
 
             try { Foraging.Install(harmony); }
             catch (Exception e) { Log.LogError("Could not install foraging rules: " + e); }

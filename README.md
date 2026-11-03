@@ -47,6 +47,8 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 | `Dialogue.RevealKey` | Shift | Shift, Control or Alt |
 | `Dialogue.DebugLog` | true | Log which choices were hidden (send me `BepInEx\LogOutput.log` if the filter misbehaves) |
 | `Tweaks.GoldWeighsNothing` | false | Coins weigh 0 |
+| `Perks.ClearPointDisplay` | true | Perks window shows "unspent / earned"; perk tooltips show the cost (1 point) and what's missing |
+| `Sanity.ShowBreakdown` | true | Stats window gets a "Sanity details" section (stage thresholds, drain, what reduces it, active causes) |
 | `Foraging.ProtectLastHarvest` | true | Bushes/flowers (Foraging plants, not trees) stop at 1 harvest left; hover text warns; hold the override key to harvest the last one |
 | `Foraging.OverrideKey` | Control | Shift, Control or Alt |
 | `Foraging.RegrowDays` | 2 | A partly-harvested plant left alone regains 1 harvest every N in-game days (0 = off) |
@@ -61,7 +63,9 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 7. World tab: Set time to noon.
 8. Dialogue: talk to any NPC. Red/unavailable choices should be hidden; hold Shift and they appear with requirements; release and they vanish. Back/Exit must always be reachable.
 9. Foraging: harvest a bush down. It should stop with 1 left (your character says "It cannot be harvested"); hover text explains; holding Control while interacting harvests it. Leave a partly-used bush for a few days: its "Harvests: x/y" count should go up.
-10. Try typing in a text box: if the game also reacts to those keys (hotkeys), tell me which.
+10. Perks: open any attribute/skill's perk window. The label should read "Perk points: X unspent / Y earned"; hover a perk for its cost and what's missing; buy one and check the number drops. The log shows a "Perks window:" line with level/earned/unspent.
+11. Stats window: scroll to "Sanity details".
+12. Try typing in a text box: if the game also reacts to those keys (hotkeys), tell me which.
 Send me `BepInEx\LogOutput.log` for any problem.
 
 ## Remove

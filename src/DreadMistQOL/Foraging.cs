@@ -116,7 +116,7 @@ namespace DreadMistQOL
             var seenNow = new HashSet<int>();
             int regrown = 0;
 
-            foreach (var c in UnityEngine.Object.FindObjectsOfType<InteractableResourceDestructibleController>())
+            foreach (var c in UnityEngine.Object.FindObjectsByType<InteractableResourceDestructibleController>(FindObjectsSortMode.None))
             {
                 if (!IsForagedPlant(c)) continue;
                 int id = c.GetInstanceID();
