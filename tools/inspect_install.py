@@ -113,6 +113,7 @@ def main():
         report["note"] = ("IL2CPP: Assembly-CSharp.dll is not present. Needs Il2CppDumper "
                           "(GameAssembly.dll + global-metadata.dat) for method/string extraction.")
 
+    (OUT / "game_path.txt").write_text(str(game), encoding="utf-8")  # local only, git-ignored
     (OUT / "report.json").write_text(json.dumps(report, indent=1))
     print(json.dumps(report, indent=1))
     print(f"\nWrote results to: {OUT}")
