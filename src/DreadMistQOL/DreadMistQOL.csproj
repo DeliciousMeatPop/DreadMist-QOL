@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- GameDir is passed in by scripts\build.ps1 (-p:GameDir=...). Nothing here is machine specific. -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>DreadMistQOL</AssemblyName>
+    <RootNamespace>DreadMistQOL</RootNamespace>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\dist\</OutputPath>
+    <DebugType>none</DebugType>
+    <ManagedDir>$(GameDir)\DreadMist_Data\Managed</ManagedDir>
+    <BepInExCore>$(GameDir)\BepInEx\core</BepInExCore>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets "dotnet build" target .NET Framework 4.7.2 without Visual Studio -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Game assemblies, referenced only (never copied into dist). System/mscorlib are excluded: net472 supplies them. -->
+    <Reference Include="$(ManagedDir)\*.dll" Exclude="$(ManagedDir)\mscorlib.dll;$(ManagedDir)\System*.dll;$(ManagedDir)\netstandard.dll;$(ManagedDir)\Mono.*.dll;$(ManagedDir)\mcs.dll">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx"><HintPath>$(BepInExCore)\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BepInExCore)\0Harmony.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <Target Name="CheckGameDir" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(GameDir)' == ''" Text="GameDir is not set. Build with scripts\build.ps1 (it finds your game folder for you)." />
+    <Error Condition="!Exists('$(BepInExCore)\BepInEx.dll')" Text="BepInEx is not installed in the game folder yet. Do the BepInEx step in the README first (install it, start the game once, quit)." />
+  </Target>
+
+</Project>

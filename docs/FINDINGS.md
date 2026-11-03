@@ -55,3 +55,52 @@ Run `tools/decompile_key_classes.py` and send `inspection/decompiled_selected.zi
 | Deranged | -50 | -0.75 | -0.50 | -0.25 (pulses every 1.0) |
 
 - What *drains* sanity is not yet known (needs `EntitySentientPlayerData`; `StatModifiers` has `SanityDrain`/`SanityChange`, dialogue actions call `ChangeSanity`).
+
+## Update 2: second decompile bundle (VERIFIED in current build)
+### Perk points (explains the "24" confusion, probably)
+- Each attribute/skill has its own `perkPointsUnlocked` (total earned) and `perkPointsCurrent` (unspent). One point is earned per **5 levels** (`min(level,100)/5`, so max 20 per attribute/skill). Spending calls `TakePerkPoint()`.
+- The Perks window label (`PerksWindowUI.perkCountText`) shows only `PerkPointsCurrent`, unlabelled. The code deliberately discards the attribute `Level`.
+- CORRECTION (user, in-game): the "24" IS the perk-point number shown in the Perks window; the level is separate. A skill at level 4 with 0 points cannot buy perks, which matches the code (`level/5` = 0 points until level 5).
+- OPEN: the code can only grant `min(level,100)/5` = **max 20** points per attribute/skill (`SkillData` uses the same formula), so 24 can't come from levelling alone. Possible causes: points stored in an older/edited save (`PerkPointsCurrent` is saved and loaded as-is), a different source I haven't seen, or the label not refreshing after a purchase. Needs in-game data (which attribute/skill, its level, and the log line the plugin will print).
+- In the Character Levels window (`StatsElementUI`) the big number is the level and the *name turns yellow* when points are unspent.
+- Cost per perk level is always **1 point**. A perk level also has `RequireLevel` (attribute/skill level), shown in red only in the hover tooltip.
+- Side effect: `PerkUpgradeEntryUI.SetPerkData()` (never-bought perk) enables Upgrade whenever points > 0 without checking level-1's `RequireLevel`. Not confirmed whether `UpgradePerk` rejects it; to test in game.
+
+### Dialogue
+- `DialoguePackageDefinition.GetTrees`, `DialogueNode.GetDialogueResponses/GetDialogueSubTreeDefinitions` already filter by `ConditionsGroup.Evaluate`. Choices shown are therefore *selectable*.
+- The red text is **display only**: `DialogueResponse.ConditionDisplay` has `ConditionIndicator`s (Skill, Coin, SocialClass, ...). Each indicator wraps itself in `<color=red>` when its own check fails and its `DisplayMode` (Always/Positive/Negative) allows showing it. The text is passed to `IntButtonTypedController.SetText(conditionText, responseText)` by `DialogueWindowUI.GoToDialogueRoot` / `SetCurrentDialogueNode`.
+- Clicking a red choice is allowed; the outcome is decided later by `DialogueBranch.Evaluate` (a failed check falls to another branch). So a filter that hides buttons whose condition text contains `<color=red>` is a pure presentation change and can't unlock anything. Back/Exit have no conditions in the game code, so they're never hidden. Plan: Harmony postfix on the two private builders, hide/show with Shift.
+
+### Sanity (what actually drains it)
+- Max = `100 + Courage level + SanityMax modifiers` (min 10).
+- Passive drain every tick = `0.00347222 x SanityDrainModifier x GameplayConfig.SanityDrainMultiplier`, applied whenever the character is not using furniture that restores sanity. `SanityDrainModifier = max(1 - min(Courage,100) x 0.005 + statModifiers.SanityDrain, 0)`: **Courage lowers drain** by up to 50%.
+- Other sources: stat effects with `SanityChange` (x0.25 per tick, restore if positive, `TakeSanity` if negative), dialogue actions (`ChangeSanity`), item sanity values, and furniture (`FurnitureSanityRestore`).
+- The game already has `ActiveValuesDisplay` (a per-hour breakdown incl. `Sanity: +/-`, red when negative). It lumps everything into one number without listing causes. The plugin can add the per-source breakdown (passive drain, Courage reduction, active effects) from the same fields.
+
+### Trading / clothing
+- Selling to a trader uses `TradingMenuInventoryUI.CanTradeItem`: items with `Value < 1` or rejected by the trader's `ItemFilter` all show a generic **"Item Invalid"**; stolen items give "I do not deal with stolen items!". `DialogueActionTrading` only opens trading if the NPC has a trading container and is near it (`ConditionTrade`).
+- Clothing items carry `Respectability` (shirt: 15) and `SocialClass` conditions exist on dialogue. Trader/clothing messages never name the reason; guidance should be added at "Item Invalid" (why: filter vs zero value) and on `NearTradingContainer`. Exact "buying clothes" failure not reproduced yet; needs in-game screenshots/steps from the user.
+
+### Misc
+- Keys: `Definition.Key` = XML file name without extension (`ResourceManager` loader), so item/perk IDs are the file names (`Misc_DevOrb`, `Perk_Brave`).
+- `_DevTest.xml` is just a bulk raw-material list, **not** what `GiveTestItems` gives (that is list `Starting_Player_Testing`, file not seen yet).
+- `ResourceManager.ItemDefinitions` exposes every loaded item at runtime, so the item picker can use real localized names without parsing XML.
+
+## Update 3: clothing is a *discoverability* problem (user, in-game)
+- User: buying clothes isn't failing; they can't find anyone selling them in town.
+- Data names two cloth-related traders: `TraderClothing_Nara` (character `NPC_NaraSouster`, likely the clothes seller) and `TraderCloth_Jaquette` (`NPC_Jaquette`). USER-CONFIRMED: Jaquette sells cloth (material) only, not clothes, matching filter `Shop_Cloth`. So Nara is the only candidate clothes seller; her location/schedule is unknown. shop lists `Shop_Store_Clothing`, `Shop_ClothesSimple`, `Shop_Market_Cloth`; item filters `Shop_Clothing`, `Shop_Cloth`. A `Tailor_Francois` package sits in `ToBeRemoved`.
+- Trading only opens if the NPC `CanTrade` AND is `NearTradingContainer` (their counter/stall). NPCs also have sleep/schedule behaviours, so a seller may be away from their stall at some times. ASSUMED; to be confirmed with the character XML.
+- Idea: a "who trades here" helper listing loaded NPCs that can trade, what they sell (their item filter / shop list), and distance/direction. Needs `NPC_Controller`, `CharacterDefinition` (Trader section) decompiled.
+
+## Dialogue filter semantics (user-defined, implemented in src/DreadMistQOL/DialogueFilter.cs)
+- Default: show only choices the player can do now. Hold Shift: show every choice with its requirements.
+- 'Can do now' = the game's requirement text for that choice has no `<color=red>` (the game marks each unmet requirement red). Limitation: an indicator the developer configured to hide itself when unmet (DisplayMode Positive) leaves no red, so such a choice still counts as available.
+- Safety: if every choice would be hidden, all are shown so a conversation can never dead-end.
+
+## Game starts (VERIFIED file contents; which are selectable in-game is unknown - user only saw Beggar)
+| Start | Priority | Difficulty | Start position (X, Z) | Notes |
+|---|---|---|---|---|
+| Beggar | 0 | Normal | -1411.6, 1552.6 | inventory `Player_Beggar`; no sanity override (default 100) |
+| Merchant | 10 | Easy | -1522.5, 1368.0 | inventory `Player_Merchant`; Bartering 30 |
+| Shipwrecked | 100 | Brutal | -1579.1, 549.5 | no inventory; 3 broken bones, low blood/stamina, **starts at Sanity 38 (already "Confused")** |
+- USER-CONFIRMED (partly): the start is chosen by the difficulty picked at new game (Easy=Merchant, Normal=Beggar, Brutal=Shipwrecked). The user chose Normal and got Beggar. The three starts are not separate menu options.
