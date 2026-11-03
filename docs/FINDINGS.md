@@ -41,3 +41,17 @@ Legend: **VERIFIED** = present in the user's file listing / string dump of the c
 
 ## Next data needed
 Run `tools/decompile_key_classes.py` and send `inspection/decompiled_selected.zip`; also the XML files listed in the README.
+
+## Update: decompiled code + XML samples (VERIFIED in current build)
+- `Mods\TestMod\ModInfo.xml` is an empty `<ModInfo></ModInfo>`: the game's native mod hook is a stub, so we use BepInEx.
+- Perk XML (`Perk_Brave`): `Type` (attribute/skill), `IconKey`, `DisplayName`, `Levels[]`; each level has `RequireLevel` (the attribute/skill level needed) and stat effects. Brave: 10 levels needing attribute level 0,10,20...90. Perk key is likely the file name (`Perk_Brave`); not yet confirmed.
+- Perk cost: the UI's upgrade click calls `UpgradePerk` then `TakePerkPoint()` once, so each perk level costs **1 point from that attribute/skill's own pool** (`AttributeData.PerkPointsCurrent`). The window label shows only that single number, unlabelled. A never-bought perk's button is enabled whenever points > 0 (the tooltip shows the level requirement in red).
+- Sanity tiers (`SentientStatEffectContainer`): sanity > 50 none; 25-50 **Confused**; 10-25 **Irrational**; < 10 **Deranged**.
+
+| Effect | Relations | Skill XP | Crafting quality | Crafting speed |
+|---|---|---|---|---|
+| Confused | -10 | -0.25 | -0.10 | - |
+| Irrational | -25 | -0.50 | -0.25 | -0.10 |
+| Deranged | -50 | -0.75 | -0.50 | -0.25 (pulses every 1.0) |
+
+- What *drains* sanity is not yet known (needs `EntitySentientPlayerData`; `StatModifiers` has `SanityDrain`/`SanityChange`, dialogue actions call `ChangeSanity`).
