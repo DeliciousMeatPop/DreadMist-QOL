@@ -60,7 +60,9 @@ Run `tools/decompile_key_classes.py` and send `inspection/decompiled_selected.zi
 ### Perk points (explains the "24" confusion, probably)
 - Each attribute/skill has its own `perkPointsUnlocked` (total earned) and `perkPointsCurrent` (unspent). One point is earned per **5 levels** (`min(level,100)/5`, so max 20 per attribute/skill). Spending calls `TakePerkPoint()`.
 - The Perks window label (`PerksWindowUI.perkCountText`) shows only `PerkPointsCurrent`, unlabelled. The code deliberately discards the attribute `Level`.
-- In the Character Levels window (`StatsElementUI`) the big number is the attribute/skill **level**, which never changes when you spend a perk point; the only hint of unspent points is the *name turning yellow*. A "24" that does not move after spending points is most likely this level number. A true points figure can't reach 24 (cap 20). ASSUMED until seen in-game.
+- CORRECTION (user, in-game): the "24" IS the perk-point number shown in the Perks window; the level is separate. A skill at level 4 with 0 points cannot buy perks, which matches the code (`level/5` = 0 points until level 5).
+- OPEN: the code can only grant `min(level,100)/5` = **max 20** points per attribute/skill (`SkillData` uses the same formula), so 24 can't come from levelling alone. Possible causes: points stored in an older/edited save (`PerkPointsCurrent` is saved and loaded as-is), a different source I haven't seen, or the label not refreshing after a purchase. Needs in-game data (which attribute/skill, its level, and the log line the plugin will print).
+- In the Character Levels window (`StatsElementUI`) the big number is the level and the *name turns yellow* when points are unspent.
 - Cost per perk level is always **1 point**. A perk level also has `RequireLevel` (attribute/skill level), shown in red only in the hover tooltip.
 - Side effect: `PerkUpgradeEntryUI.SetPerkData()` (never-bought perk) enables Upgrade whenever points > 0 without checking level-1's `RequireLevel`. Not confirmed whether `UpgradePerk` rejects it; to test in game.
 
