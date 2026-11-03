@@ -38,6 +38,16 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
    The hotkey is `ToggleCheatPanel = F8` (change it there, e.g. `LeftControl + F8`).
 3. Load a save, press **F8**.
 
+## Settings (BepInEx\config\com.deliciousmeatpop.dreadmistqol.cfg)
+| Setting | Default | What it does |
+|---|---|---|
+| `Cheats.EnableCheatPanel` | false | Master switch for the cheat panel |
+| `Hotkeys.ToggleCheatPanel` | F8 | Show/hide the panel (the X button also hides it, `_` minimizes it to a thin bar) |
+| `Dialogue.HideUnavailableChoices` | true | Hide choices you can't do now; hold the reveal key to see all. Set false to turn the filter off completely |
+| `Dialogue.RevealKey` | Shift | Shift, Control or Alt |
+| `Dialogue.DebugLog` | true | Log which choices were hidden (send me `BepInEx\LogOutput.log` if the filter misbehaves) |
+| `Tweaks.GoldWeighsNothing` | false | Coins weigh 0 |
+
 ## Testing checklist (please report what happens)
 1. The game starts and `BepInEx\LogOutput.log` contains `DreadMist QOL 0.1.0 loaded`.
 2. With `EnableCheatPanel = false`, F8 shows a "disabled" box and nothing else changes.

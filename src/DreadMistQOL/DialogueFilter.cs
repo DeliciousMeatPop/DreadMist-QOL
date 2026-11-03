@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace DreadMistQOL
 {
@@ -51,11 +52,24 @@ namespace DreadMistQOL
             get { return Plugin.FilterDialogue.Value && !_revealHeld; }
         }
 
-        private static void Rebuilt(Dreadmist.UI.DialogueWindowUI window)
+        private static string Clean(string t)
+        {
+            if (t == null) return "";
+            var sb = new System.Text.StringBuilder();
+            bool tag = false;
+            foreach (char c in t) { if (c == '<') tag = true; else if (c == '>') tag = false; else if (!tag) sb.Append(c); }
+            string r = sb.ToString().Replace('\n', ' ');
+            return r.Length > 80 ? r.Substring(0, 80) : r;
+        }
+
+        private static void Rebuilt(Dreadmist.UI.DialogueWindowUI window, string where)
         {
             Unavailable.Clear();
             var buttons = ButtonsField.GetValue(window) as List<Dreadmist.UI.IntButtonTypedController>;
             if (buttons == null) return;
+
+            // Buttons are reused (and cloned from button 0), so always start from a clean, visible state.
+            foreach (var b in buttons) { if (b != null) SetHidden(b, false); }
 
             int available = 0;
             var red = new List<Dreadmist.UI.IntButtonTypedController>();
@@ -65,6 +79,16 @@ namespace DreadMistQOL
                 string text;
                 if (ConditionText.TryGetValue(b, out text) && text != null && text.Contains(RedMarker)) red.Add(b);
                 else available++;
+            }
+
+            if (Plugin.DialogueDebug.Value)
+            {
+                Plugin.Log.LogInfo("Dialogue " + where + ": " + (available + red.Count) + " choices, " + red.Count + " unavailable.");
+                foreach (var b in red)
+                {
+                    string t; ConditionText.TryGetValue(b, out t);
+                    Plugin.Log.LogInfo("   unavailable: [" + Clean(t) + "]");
+                }
             }
 
             // Safety: never leave the player with no choices at all.
@@ -82,8 +106,27 @@ namespace DreadMistQOL
             bool hide = ShouldHide;
             foreach (var b in Unavailable)
             {
-                if (b != null) b.gameObject.SetActive(!hide);
+                if (b != null) SetHidden(b, hide);
             }
+        }
+
+        /// <summary>
+        /// Hides a button WITHOUT deactivating it. Deactivating stops the game's text-typing effect part-way, and the
+        /// button only becomes clickable when typing finishes, so a deactivated choice could stay dead afterwards.
+        /// </summary>
+        private static void SetHidden(Dreadmist.UI.IntButtonTypedController b, bool hidden)
+        {
+            var cg = b.GetComponent<CanvasGroup>();
+            var le = b.GetComponent<LayoutElement>();
+            if (!hidden && cg == null && le == null) return; // nothing of ours to undo
+
+            if (cg == null) cg = b.gameObject.AddComponent<CanvasGroup>();
+            cg.alpha = hidden ? 0f : 1f;
+            cg.blocksRaycasts = !hidden;
+            cg.interactable = !hidden;
+
+            if (le == null) le = b.gameObject.AddComponent<LayoutElement>();
+            le.ignoreLayout = hidden;
         }
 
         [HarmonyPatch(typeof(Dreadmist.UI.IntButtonTypedController), "SetText")]
@@ -105,7 +148,7 @@ namespace DreadMistQOL
         {
             private static void Postfix(Dreadmist.UI.DialogueWindowUI __instance)
             {
-                try { Rebuilt(__instance); }
+                try { Rebuilt(__instance, "root"); }
                 catch (Exception e) { Plugin.Log.LogError("Dialogue filter (root): " + e); }
             }
         }
@@ -115,7 +158,7 @@ namespace DreadMistQOL
         {
             private static void Postfix(Dreadmist.UI.DialogueWindowUI __instance)
             {
-                try { Rebuilt(__instance); }
+                try { Rebuilt(__instance, "node"); }
                 catch (Exception e) { Plugin.Log.LogError("Dialogue filter (node): " + e); }
             }
         }

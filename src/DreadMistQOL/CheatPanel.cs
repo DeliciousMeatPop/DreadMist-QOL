@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace DreadMistQOL
@@ -19,9 +21,15 @@ namespace DreadMistQOL
             public string Lower;
         }
 
-        private static readonly string[] TabNames = { "Items", "Progress", "Perks", "Character", "World" };
+        private static readonly string[] TabNames = { "Items", "Progress", "Perks", "Character", "World", "Commands" };
 
-        private Rect _window = new Rect(40f, 40f, 580f, 680f);
+        private Rect _window = new Rect(40f, 40f, 680f, 740f);
+        private Rect _bar = new Rect(40f, 40f, 420f, 64f);
+        private bool _minimized;
+
+        public bool Visible;
+
+        public void Expand() { _minimized = false; }
         private int _tab;
         private string _status = "Ready. Load a game first, then pick an action.";
 
@@ -60,11 +68,44 @@ namespace DreadMistQOL
 
         public void Draw()
         {
-            _window = GUILayout.Window(0x51A9, _window, DrawWindow, "DreadMist QOL - optional cheat panel");
+            GUISkin previous = GUI.skin;
+            GUI.skin = Ui.Skin; // our dark, readable skin only applies to our windows
+            try
+            {
+                if (_minimized)
+                    _bar = GUILayout.Window(0x51AA, _bar, DrawBar, "DreadMist QOL");
+                else
+                    _window = GUILayout.Window(0x51A9, _window, DrawWindow, "DreadMist QOL - optional cheat panel");
+            }
+            finally
+            {
+                GUI.skin = previous;
+            }
+        }
+
+        /// <summary>Compact strip shown while minimized: stays on screen but covers almost nothing.</summary>
+        private void DrawBar(int id)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(Shorten(_status, 46));
+            if (GUILayout.Button("Open", GUILayout.Width(60f))) _minimized = false;
+            if (GUILayout.Button("X", GUILayout.Width(32f))) Visible = false;
+            GUILayout.EndHorizontal();
+            GUI.DragWindow(new Rect(0f, 0f, 10000f, 24f));
+        }
+
+        private static string Shorten(string t, int max)
+        {
+            if (t == null) return "";
+            return t.Length <= max ? t : t.Substring(0, max - 1) + "...";
         }
 
         private void DrawWindow(int id)
         {
+            // Window buttons in the title bar: minimize and close.
+            if (GUI.Button(new Rect(_window.width - 74f, 5f, 32f, 22f), "_")) _minimized = true;
+            if (GUI.Button(new Rect(_window.width - 38f, 5f, 32f, 22f), "X")) Visible = false;
+
             _tab = GUILayout.Toolbar(_tab, TabNames);
             GUILayout.Label("Status: " + _status, Ui.Hint);
 
@@ -76,11 +117,12 @@ namespace DreadMistQOL
                 case 2: DrawPerks(); break;
                 case 3: DrawCharacter(); break;
                 case 4: DrawWorld(); break;
+                case 5: DrawCommands(); break;
             }
             GUILayout.EndScrollView();
 
-            GUILayout.Label("Actions affect the first selected character. Drag the title bar to move this window.", Ui.Hint);
-            GUI.DragWindow(new Rect(0f, 0f, 10000f, 22f));
+            GUILayout.Label("Actions affect the first selected character. Drag the title bar to move. _ minimizes, X closes (hotkey reopens).", Ui.Hint);
+            GUI.DragWindow(new Rect(0f, 0f, 10000f, 26f));
         }
 
         // ---------------------------------------------------------------- helpers
@@ -104,8 +146,9 @@ namespace DreadMistQOL
                 _status = "Done: " + what;
                 Plugin.Log.LogInfo("Cheat panel ran: " + what);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                Exception e = (ex is TargetInvocationException && ex.InnerException != null) ? ex.InnerException : ex;
                 _status = "FAILED: " + what + " (" + e.Message + ") - see BepInEx\\LogOutput.log";
                 Plugin.Log.LogError("Cheat panel failed: " + what + "\n" + e);
             }
@@ -177,6 +220,13 @@ namespace DreadMistQOL
                 int amount = Ui.ParseInt(_coinQty, 1000, 1, 100000000);
                 Run("GiveCoin " + amount, () => QFSW.QC.ConsoleCommands.GiveCoin(amount));
             }
+            if (Ui.Action("Give Dev Orb (storage relief)", "Gives Misc_DevOrb. The developer described it as helping with carrying weight/space; exact effect not yet verified here."))
+                Run("GiveItem Misc_DevOrb", () =>
+                {
+                    if (!Dreadmist.ResourceManager.Instance.CheckForItemDefinition("Misc_DevOrb"))
+                        throw new Exception("Misc_DevOrb does not exist in this game version");
+                    QFSW.QC.ConsoleCommands.GiveItem("Misc_DevOrb", 1);
+                });
             if (Ui.Action("Give test items", "Gives the developer's test item list (Starting_Player_Testing). Same as: GiveTestItems."))
                 Run("GiveTestItems", () => QFSW.QC.ConsoleCommands.GiveTestItems());
         }
@@ -372,6 +422,77 @@ namespace DreadMistQOL
                 Run("SetWeatherCloudy", () => QFSW.QC.ConsoleCommands.SetWeatherCloudy(), false);
             if (Ui.Action("Rain", "Forces rain. Same as: SetWeatherRain."))
                 Run("SetWeatherRain", () => QFSW.QC.ConsoleCommands.SetWeatherRain(), false);
+        }
+
+        // ---------------------------------------------------------------- Commands (generic)
+
+        private sealed class CmdEntry
+        {
+            public MethodInfo Method;
+            public string Name;
+            public ParameterInfo[] Params;
+            public string[] Args;
+        }
+
+        private List<CmdEntry> _cmds;
+        private string _cmdSearch = "";
+
+        private void EnsureCommands()
+        {
+            if (_cmds != null) return;
+            _cmds = new List<CmdEntry>();
+            var methods = typeof(QFSW.QC.ConsoleCommands).GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
+            foreach (var m in methods.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                var ps = m.GetParameters();
+                var args = ps.Select(p => (p.HasDefaultValue && p.DefaultValue != null)
+                    ? Convert.ToString(p.DefaultValue, CultureInfo.InvariantCulture) : "").ToArray();
+                _cmds.Add(new CmdEntry { Method = m, Name = m.Name, Params = ps, Args = args });
+            }
+            Plugin.Log.LogInfo("Cheat panel found " + _cmds.Count + " console commands.");
+        }
+
+        private static object Convert1(string text, ParameterInfo p)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                if (p.HasDefaultValue) return p.DefaultValue;
+                throw new Exception("'" + p.Name + "' needs a value");
+            }
+            if (p.ParameterType == typeof(string)) return text.Trim();
+            return Convert.ChangeType(text.Trim().Replace(',', '.'), p.ParameterType, CultureInfo.InvariantCulture);
+        }
+
+        private void DrawCommands()
+        {
+            GUILayout.Label("Every console command the game has. Fill in the boxes (defaults are pre-filled) and click the command name.", Ui.Hint);
+            EnsureCommands();
+            _cmdSearch = Ui.TextField("Search", _cmdSearch, 260f);
+            string q = (_cmdSearch ?? "").Trim().ToLowerInvariant();
+
+            foreach (var c in _cmds)
+            {
+                if (q.Length > 0 && !c.Name.ToLowerInvariant().Contains(q)) continue;
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button(c.Name, GUILayout.Width(230f)))
+                {
+                    var entry = c;
+                    string summary = c.Name + " " + string.Join(" ", c.Args);
+                    Run(summary.Trim(), () =>
+                    {
+                        var values = new object[entry.Params.Length];
+                        for (int i = 0; i < values.Length; i++) values[i] = Convert1(entry.Args[i], entry.Params[i]);
+                        entry.Method.Invoke(null, values);
+                    }, false);
+                }
+                for (int i = 0; i < c.Params.Length; i++)
+                {
+                    GUILayout.Label(c.Params[i].Name + ":", GUILayout.Width(110f));
+                    c.Args[i] = GUILayout.TextField(c.Args[i] ?? "", GUILayout.Width(100f));
+                }
+                GUILayout.EndHorizontal();
+            }
         }
     }
 }
