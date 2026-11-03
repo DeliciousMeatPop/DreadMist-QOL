@@ -96,3 +96,10 @@ Run `tools/decompile_key_classes.py` and send `inspection/decompiled_selected.zi
 - Default: show only choices the player can do now. Hold Shift: show every choice with its requirements.
 - 'Can do now' = the game's requirement text for that choice has no `<color=red>` (the game marks each unmet requirement red). Limitation: an indicator the developer configured to hide itself when unmet (DisplayMode Positive) leaves no red, so such a choice still counts as available.
 - Safety: if every choice would be hidden, all are shown so a conversation can never dead-end.
+
+## Game starts (VERIFIED file contents; which are selectable in-game is unknown - user only saw Beggar)
+| Start | Priority | Difficulty | Start position (X, Z) | Notes |
+|---|---|---|---|---|
+| Beggar | 0 | Normal | -1411.6, 1552.6 | inventory `Player_Beggar`; no sanity override (default 100) |
+| Merchant | 10 | Easy | -1522.5, 1368.0 | inventory `Player_Merchant`; Bartering 30 |
+| Shipwrecked | 100 | Brutal | -1579.1, 549.5 | no inventory; 3 broken bones, low blood/stamina, **starts at Sanity 38 (already "Confused")** |
