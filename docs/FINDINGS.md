@@ -85,3 +85,9 @@ Run `tools/decompile_key_classes.py` and send `inspection/decompiled_selected.zi
 - Keys: `Definition.Key` = XML file name without extension (`ResourceManager` loader), so item/perk IDs are the file names (`Misc_DevOrb`, `Perk_Brave`).
 - `_DevTest.xml` is just a bulk raw-material list, **not** what `GiveTestItems` gives (that is list `Starting_Player_Testing`, file not seen yet).
 - `ResourceManager.ItemDefinitions` exposes every loaded item at runtime, so the item picker can use real localized names without parsing XML.
+
+## Update 3: clothing is a *discoverability* problem (user, in-game)
+- User: buying clothes isn't failing; they can't find anyone selling them in town.
+- Data shows clothing sellers exist in the file listing: dialogue packages `TraderClothing_Nara` (character `NPC_NaraSouster`) and `TraderCloth_Jaquette` (`NPC_Jaquette`); shop lists `Shop_Store_Clothing`, `Shop_ClothesSimple`, `Shop_Market_Cloth`; item filters `Shop_Clothing`, `Shop_Cloth`. A `Tailor_Francois` package sits in `ToBeRemoved`.
+- Trading only opens if the NPC `CanTrade` AND is `NearTradingContainer` (their counter/stall). NPCs also have sleep/schedule behaviours, so a seller may be away from their stall at some times. ASSUMED; to be confirmed with the character XML.
+- Idea: a "who trades here" helper listing loaded NPCs that can trade, what they sell (their item filter / shop list), and distance/direction. Needs `NPC_Controller`, `CharacterDefinition` (Trader section) decompiled.
