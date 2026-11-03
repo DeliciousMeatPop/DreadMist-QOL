@@ -25,6 +25,9 @@ namespace DreadMistQOL
         internal static ConfigEntry<bool> FilterDialogue;
         internal static ConfigEntry<bool> DialogueDebug;
         internal static ConfigEntry<bool> GoldWeighsNothing;
+        internal static ConfigEntry<bool> ProtectLastHarvest;
+        internal static ConfigEntry<RevealModifier> ForageOverrideKey;
+        internal static ConfigEntry<int> RegrowDays;
         internal static ConfigEntry<RevealModifier> DialogueRevealKey;
 
         internal enum RevealModifier { Shift, Control, Alt }
@@ -68,11 +71,27 @@ namespace DreadMistQOL
                 "When true, coins have zero weight (they no longer reduce how much else you can carry). " +
                 "This is a gameplay tweak, off by default. Reopen your inventory after changing it.");
 
+            ProtectLastHarvest = Config.Bind(
+                "Foraging", "ProtectLastHarvest", true,
+                "Bushes, flowers and similar foraged plants stop at 1 harvest left, because the last harvest destroys the plant. " +
+                "Hover text warns you. Hold the override key while interacting to harvest the last one anyway. Trees are not affected.");
+
+            ForageOverrideKey = Config.Bind(
+                "Foraging", "OverrideKey", RevealModifier.Control,
+                "Key to hold to harvest a protected plant's last harvest (and destroy it). One of: Shift, Control, Alt.");
+
+            RegrowDays = Config.Bind(
+                "Foraging", "RegrowDays", 2,
+                "A partly-harvested foraged plant that is left alone regains 1 harvest every this many in-game days. 0 = off.");
+
             _cheats = new CheatPanel();
             var harmony = new Harmony(Guid);
 
             try { Tweaks.Install(harmony); }
             catch (Exception e) { Log.LogError("Could not install tweaks: " + e); }
+
+            try { Foraging.Install(harmony); }
+            catch (Exception e) { Log.LogError("Could not install foraging rules: " + e); }
 
             if (FilterDialogue.Value)
             {
@@ -92,8 +111,11 @@ namespace DreadMistQOL
             try
             {
                 HandleHotkey();
-                if (FilterDialogue.Value && Event.current != null)
-                    DialogueFilter.UpdateReveal(RevealHeld(Event.current));
+                if (Event.current != null)
+                {
+                    if (FilterDialogue.Value) DialogueFilter.UpdateReveal(ModifierDown(Event.current, DialogueRevealKey.Value));
+                    Foraging.OverrideHeld = ProtectLastHarvest.Value && ModifierDown(Event.current, ForageOverrideKey.Value);
+                }
 
                 if (_cheats.Visible && EnableCheatPanel.Value)
                     _cheats.Draw();
@@ -113,6 +135,14 @@ namespace DreadMistQOL
                 }
             }
         }
+
+        private void Update()
+        {
+            try { Foraging.Tick(); }
+            catch (Exception e) { if (!_updateErrorLogged) { _updateErrorLogged = true; Log.LogError("Update failed: " + e); } }
+        }
+
+        private bool _updateErrorLogged;
 
         private void HandleHotkey()
         {
@@ -138,11 +168,11 @@ namespace DreadMistQOL
             e.Use();
         }
 
-        private bool RevealHeld(Event e)
+        private bool ModifierDown(Event e, RevealModifier which)
         {
             KeyCode left, right;
             bool fromEvent;
-            switch (DialogueRevealKey.Value)
+            switch (which)
             {
                 case RevealModifier.Control: left = KeyCode.LeftControl; right = KeyCode.RightControl; fromEvent = e.control; break;
                 case RevealModifier.Alt: left = KeyCode.LeftAlt; right = KeyCode.RightAlt; fromEvent = e.alt; break;

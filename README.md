@@ -47,6 +47,9 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 | `Dialogue.RevealKey` | Shift | Shift, Control or Alt |
 | `Dialogue.DebugLog` | true | Log which choices were hidden (send me `BepInEx\LogOutput.log` if the filter misbehaves) |
 | `Tweaks.GoldWeighsNothing` | false | Coins weigh 0 |
+| `Foraging.ProtectLastHarvest` | true | Bushes/flowers (Foraging plants, not trees) stop at 1 harvest left; hover text warns; hold the override key to harvest the last one |
+| `Foraging.OverrideKey` | Control | Shift, Control or Alt |
+| `Foraging.RegrowDays` | 2 | A partly-harvested plant left alone regains 1 harvest every N in-game days (0 = off) |
 
 ## Testing checklist (please report what happens)
 1. The game starts and `BepInEx\LogOutput.log` contains `DreadMist QOL 0.1.0 loaded`.
@@ -57,7 +60,8 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 6. Perks tab: pick Courage, pick Brave, **Give perk**.
 7. World tab: Set time to noon.
 8. Dialogue: talk to any NPC. Red/unavailable choices should be hidden; hold Shift and they appear with requirements; release and they vanish. Back/Exit must always be reachable.
-9. Try typing in a text box: if the game also reacts to those keys (hotkeys), tell me which.
+9. Foraging: harvest a bush down. It should stop with 1 left (your character says "It cannot be harvested"); hover text explains; holding Control while interacting harvests it. Leave a partly-used bush for a few days: its "Harvests: x/y" count should go up.
+10. Try typing in a text box: if the game also reacts to those keys (hotkeys), tell me which.
 Send me `BepInEx\LogOutput.log` for any problem.
 
 ## Remove
