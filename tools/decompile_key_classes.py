@@ -37,6 +37,9 @@ WANTED = [
     "ItemEquipmentData", "InventoryHumanoidData", "ItemContextMenuUI", "HoverToolTipUI",
 ]
 
+FAMILY_WORDS = ("Interactable", "Forag", "Growable", "Bush", "Dig", "Shovel", "Fishing", "Bait",
+                "NPC_Behavior", "NPC_Property", "CharacterDefinition", "TraderDefinition", "Schedule")
+
 
 def main():
     gp = Path(sys.argv[1]) if len(sys.argv) > 1 else None
@@ -64,6 +67,10 @@ def main():
         (found if hits else missing).append(name)
         for h in hits:
             shutil.copy2(h, SEL / h.name)
+    # Whole families (names containing these words): foraging/digging/fishing/growth and NPC behaviour/shops.
+    for p in cs:
+        if any(w in p.stem for w in FAMILY_WORDS):
+            shutil.copy2(p, SEL / p.name)
     # include every ConditionIndicator*/Condition* sibling: they define the red requirement text
     for p in cs:
         if p.stem.startswith(("ConditionIndicator", "Condition")) or p.stem.startswith("DialogueAction"):

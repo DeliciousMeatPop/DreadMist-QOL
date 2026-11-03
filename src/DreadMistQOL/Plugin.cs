@@ -23,6 +23,8 @@ namespace DreadMistQOL
         internal static ConfigEntry<bool> EnableCheatPanel;
         internal static ConfigEntry<KeyboardShortcut> CheatPanelHotkey;
         internal static ConfigEntry<bool> FilterDialogue;
+        internal static ConfigEntry<bool> DialogueDebug;
+        internal static ConfigEntry<bool> GoldWeighsNothing;
         internal static ConfigEntry<RevealModifier> DialogueRevealKey;
 
         internal enum RevealModifier { Shift, Control, Alt }
@@ -30,7 +32,6 @@ namespace DreadMistQOL
         private bool _legacyInputOk = true;
 
         private CheatPanel _cheats;
-        private bool _cheatsOpen;
         private float _noticeUntil;
         private bool _drawErrorLogged;
 
@@ -58,11 +59,24 @@ namespace DreadMistQOL
                 "Dialogue", "RevealKey", RevealModifier.Shift,
                 "Key to hold to reveal unavailable choices. One of: Shift, Control, Alt.");
 
+            DialogueDebug = Config.Bind(
+                "Dialogue", "DebugLog", true,
+                "Write one log line per dialogue screen (how many choices were hidden and why) to BepInEx\\LogOutput.log. Helps troubleshooting.");
+
+            GoldWeighsNothing = Config.Bind(
+                "Tweaks", "GoldWeighsNothing", false,
+                "When true, coins have zero weight (they no longer reduce how much else you can carry). " +
+                "This is a gameplay tweak, off by default. Reopen your inventory after changing it.");
+
             _cheats = new CheatPanel();
+            var harmony = new Harmony(Guid);
+
+            try { Tweaks.Install(harmony); }
+            catch (Exception e) { Log.LogError("Could not install tweaks: " + e); }
 
             if (FilterDialogue.Value)
             {
-                try { DialogueFilter.Install(new Harmony(Guid)); }
+                try { DialogueFilter.Install(harmony); }
                 catch (Exception e) { Log.LogError("Could not install the dialogue filter: " + e); }
             }
 
@@ -81,7 +95,7 @@ namespace DreadMistQOL
                 if (FilterDialogue.Value && Event.current != null)
                     DialogueFilter.UpdateReveal(RevealHeld(Event.current));
 
-                if (_cheatsOpen && EnableCheatPanel.Value)
+                if (_cheats.Visible && EnableCheatPanel.Value)
                     _cheats.Draw();
 
                 if (Time.realtimeSinceStartup < _noticeUntil)
@@ -117,8 +131,9 @@ namespace DreadMistQOL
             }
             else
             {
-                _cheatsOpen = !_cheatsOpen;
-                Log.LogInfo("Cheat panel " + (_cheatsOpen ? "opened" : "closed"));
+                _cheats.Visible = !_cheats.Visible;
+                if (_cheats.Visible) _cheats.Expand();
+                Log.LogInfo("Cheat panel " + (_cheats.Visible ? "opened" : "closed"));
             }
             e.Use();
         }
