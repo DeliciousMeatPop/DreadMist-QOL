@@ -38,7 +38,7 @@ WANTED = [
 ]
 
 FAMILY_WORDS = ("Interactable", "Forag", "Growable", "Bush", "Dig", "Shovel", "Fishing", "Bait",
-                "NPC_Behavior", "NPC_Property", "CharacterDefinition", "TraderDefinition", "Schedule")
+                "NPC_Behavior", "NPC_Property", "WorldManager", "SaveGame", "GameSave", "SaveManager", "InteractionController", "ResourceNodeDefinition", "ResourceDefinition", "ToolType", "CharacterDefinition", "TraderDefinition", "Schedule")
 
 
 def main():
