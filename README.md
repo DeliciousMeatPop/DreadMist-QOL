@@ -1,85 +1,82 @@
-# DreadMist-QOL
+# DreadMist QOL
 
-Quality-of-life mod for **DreadMist** (Steam app 2285190, single-player; not Dreadmyst).
-It is a BepInEx plugin: **no original game file is changed**, and removal is one script.
+A quality-of-life mod for **DreadMist** (the single-player sandbox RPG by Michael Shoots, Steam app 2285190 - not Dreadmyst).
 
-Status: **0.1.0 - first working draft, not yet tested in the real game.** Included so far:
-the optional **cheat panel** (buttons for the game's console commands) and the **dialogue filter**
-(conversations show only choices you can do now; hold **Shift** to see all choices with their requirements;
-setting `HideUnavailableChoices`, `RevealKey`). Perk-point display and sanity/trader-finder are next (findings in `docs/FINDINGS.md`).
+It makes the game easier to read and understand **without changing its normal rules**. Every feature has its own on/off switch, and the optional cheat panel is **off by default**.
 
-Quality-of-life features and cheats are separate. The cheat panel is **off by default** (`EnableCheatPanel = false`).
+> **Unofficial fan mod.** Not affiliated with or endorsed by the game's developer. It contains no game files; it only adds one small plugin file next to your game. Early release (v0.2.0): please report problems, see "Feedback" below.
 
-## What you need
-- Windows, DreadMist installed through Steam
-- Python 3 (only for the optional inspection tools)
-- The .NET SDK: https://dotnet.microsoft.com/download (big "Download" button, then reopen PowerShell)
+## What it does
 
-No paths are hardcoded. The scripts find the game through Steam; if they can't, a folder picker opens.
+| Feature | What you get |
+|---|---|
+| **Cleaner dialogue** | Conversations only show the choices you can do right now. **Hold Shift** to see every choice together with its requirements. Presentation only: nothing is bypassed. |
+| **Clear perk points** | The perk window says "Perk points: X unspent / Y earned". Hovering a perk shows its cost (1 point) and exactly what is missing (level needed, no points, when the next point comes). |
+| **Sanity details** | The stats window gets a "Sanity details" section: your stage and where the next one starts, what your maximum is made of, the constant drain and how Courage reduces it, and each active effect raising or lowering sanity. Information only; the mechanic is unchanged. |
+| **Foraging protection** | Bushes, flowers and similar foraged plants stop at 1 harvest left (the last one destroys the plant). A hover note explains it; **hold Control** while interacting to harvest the last one anyway. Trees are not affected. |
+| **Plant regrowth** | A partly-harvested plant you leave alone regains 1 harvest every 2 in-game days. |
+| **Gold weighs nothing** *(optional, off)* | Coins stop counting toward your carry weight. |
+| **Cheat panel** *(optional, off)* | A clickable panel for the game's own console commands: give items (searchable names + quantity), coins, XP and levels, perks, revive, time/weather, and a tab listing **every** console command with argument boxes. Has minimize and close buttons. Uses exactly the commands you could type with `~`. |
 
-## 1) Install BepInEx (manual, one time)
-1. Download **BepInEx 5.4.x, x64** (file named like `BepInEx_win_x64_5.4.23.x.zip`) from https://github.com/BepInEx/BepInEx/releases. Use 5.4.x, not 6 / "bleeding edge".
-2. Unzip **into the game folder** (right-click DreadMist in Steam > Manage > Browse local files) so `winhttp.dll` sits next to `DreadMist.exe`.
-3. Start the game once, wait for the main menu, quit. This creates `BepInEx\core`, `BepInEx\config`, `BepInEx\LogOutput.log`.
+Everything is explained further down, including how to change the settings.
 
-## 2) Build and install the mod
-Open PowerShell in this repo's folder:
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build.ps1
-```
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-```
-(If the build fails, copy the red error text. Don't edit anything.)
+## Install (about 5 minutes, Windows)
 
-## 3) Turn on the cheat panel (optional)
-1. Start the game once so the config file is created, then quit.
-2. Open `BepInEx\config\com.deliciousmeatpop.dreadmistqol.cfg` and set `EnableCheatPanel = true`.
-   The hotkey is `ToggleCheatPanel = F8` (change it there, e.g. `LeftControl + F8`).
-3. Load a save, press **F8**.
+You need **BepInEx 5** (a free, widely used mod loader) once, then this mod.
 
-## Settings (BepInEx\config\com.deliciousmeatpop.dreadmistqol.cfg)
-| Setting | Default | What it does |
+**1. Install BepInEx**
+1. Download **BepInEx 5.4.x, x64** (a file like `BepInEx_win_x64_5.4.23.x.zip`) from <https://github.com/BepInEx/BepInEx/releases>. Use the 5.4.x version, not 6 or "bleeding edge".
+2. Open the game folder: in Steam right-click DreadMist, **Manage > Browse local files**. It is the folder containing `DreadMist.exe`.
+3. Extract the zip **into that folder**, so `winhttp.dll` sits next to `DreadMist.exe`.
+4. Start the game once, wait for the main menu, then quit. This creates the `BepInEx\config` and `BepInEx\plugins` folders.
+
+**2. Install DreadMist QOL**
+1. Download `DreadMistQOL-v0.2.0.zip` from the **Releases** page of this repository.
+2. Extract it **into the game folder** too (say yes to merging the `BepInEx` folder). The result must be `BepInEx\plugins\DreadMistQOL\DreadMistQOL.dll`.
+3. Start the game. Open `BepInEx\LogOutput.log`: it should contain `DreadMist QOL 0.2.0 loaded`.
+
+**Uninstall:** delete the `BepInEx\plugins\DreadMistQOL` folder. To remove BepInEx as well, delete the `BepInEx` folder, `winhttp.dll`, `doorstop_config.ini` and `.doorstop_version` from the game folder. Your saves are never touched.
+
+## Using it
+
+- **Dialogue:** talk to anyone. Unavailable choices are hidden; hold **Shift** to show them with their requirements. If every choice would be hidden, all are shown, so you can never get stuck.
+- **Perks:** open a skill's perk window and hover a perk.
+- **Sanity:** open the character stats window and scroll to "Sanity details".
+- **Foraging:** hover a bush: the hover text shows "Harvests: remaining/limit", plus a note when it is protected or regrowing.
+- **Cheat panel** (if enabled): press **F8** to open. **X** closes it, **_** shrinks it to a thin bar that stays on screen. Pressing F8 again also closes it.
+
+## Settings
+
+Start the game once, then edit `BepInEx\config\com.deliciousmeatpop.dreadmistqol.cfg` with Notepad. Restart the game after changing it.
+
+| Setting | Default | Meaning |
 |---|---|---|
-| `Cheats.EnableCheatPanel` | false | Master switch for the cheat panel |
-| `Hotkeys.ToggleCheatPanel` | F8 | Show/hide the panel (the X button also hides it, `_` minimizes it to a thin bar) |
-| `Dialogue.HideUnavailableChoices` | true | Hide choices you can't do now; hold the reveal key to see all. Set false to turn the filter off completely |
-| `Dialogue.RevealKey` | Shift | Shift, Control or Alt |
-| `Dialogue.DebugLog` | true | Log which choices were hidden (send me `BepInEx\LogOutput.log` if the filter misbehaves) |
-| `Tweaks.GoldWeighsNothing` | false | Coins weigh 0 |
-| `Perks.ClearPointDisplay` | true | Perks window shows "unspent / earned"; perk tooltips show the cost (1 point) and what's missing |
-| `Sanity.ShowBreakdown` | true | Stats window gets a "Sanity details" section (stage thresholds, drain, what reduces it, active causes) |
-| `Foraging.ProtectLastHarvest` | true | Bushes/flowers (Foraging plants, not trees) stop at 1 harvest left; hover text warns; hold the override key to harvest the last one |
-| `Foraging.OverrideKey` | Control | Shift, Control or Alt |
-| `Foraging.RegrowDays` | 2 | A partly-harvested plant left alone regains 1 harvest every N in-game days (0 = off) |
+| `Cheats` > `EnableCheatPanel` | `false` | Turns the cheat panel on |
+| `Hotkeys` > `ToggleCheatPanel` | `F8` | Hotkey, e.g. `LeftControl + F8` |
+| `Dialogue` > `HideUnavailableChoices` | `true` | `false` turns the dialogue filter off completely |
+| `Dialogue` > `RevealKey` | `Shift` | `Shift`, `Control` or `Alt` |
+| `Dialogue` > `DebugLog` | `true` | Writes what was hidden to the log (helps bug reports) |
+| `Perks` > `ClearPointDisplay` | `true` | Perk point label and perk tooltips |
+| `Sanity` > `ShowBreakdown` | `true` | "Sanity details" in the stats window |
+| `Foraging` > `ProtectLastHarvest` | `true` | Stop at 1 harvest left |
+| `Foraging` > `OverrideKey` | `Control` | Key to harvest the protected last one |
+| `Foraging` > `RegrowDays` | `2` | Days per regrown harvest. `0` turns regrowth off |
+| `Tweaks` > `GoldWeighsNothing` | `false` | Coins weigh 0 |
 
-## Testing checklist (please report what happens)
-1. The game starts and `BepInEx\LogOutput.log` contains `DreadMist QOL 0.1.0 loaded`.
-2. With `EnableCheatPanel = false`, F8 shows a "disabled" box and nothing else changes.
-3. With it `true`, F8 opens/closes the panel (after loading a save).
-4. Items tab: search "coin" or "orb", pick one, quantity 2, **Give item**. It shows up in the inventory.
-5. Progress tab: pick Strength, Add experience 100.
-6. Perks tab: pick Courage, pick Brave, **Give perk**.
-7. World tab: Set time to noon.
-8. Dialogue: talk to any NPC. Red/unavailable choices should be hidden; hold Shift and they appear with requirements; release and they vanish. Back/Exit must always be reachable.
-9. Foraging: harvest a bush down. It should stop with 1 left (your character says "It cannot be harvested"); hover text explains; holding Control while interacting harvests it. Leave a partly-used bush for a few days: its "Harvests: x/y" count should go up.
-10. Perks: open any attribute/skill's perk window. The label should read "Perk points: X unspent / Y earned"; hover a perk for its cost and what's missing; buy one and check the number drops. The log shows a "Perks window:" line with level/earned/unspent.
-11. Stats window: scroll to "Sanity details".
-12. Try typing in a text box: if the game also reacts to those keys (hotkeys), tell me which.
-Send me `BepInEx\LogOutput.log` for any problem.
+## Good to know
 
-## Remove
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\uninstall.ps1
-```
-Add `-RemoveBepInEx` to also remove BepInEx (back to a stock game folder), `-RemoveConfig` to delete the settings file.
+- **Perk points are per skill.** Each attribute and skill has its own pool: 1 point for every 5 levels (max 20 each), and every perk level costs 1 point. A skill at level 4 has 0 points, so nothing can be bought yet.
+- **"Unavailable" in dialogue** means the game itself marked a requirement red. Choices whose requirements the developer chose to hide can't be detected and stay visible.
+- **Game updates** can rename internal parts of the game. Each feature installs separately, so one breaking should not stop the others; errors are written to the log.
+- Tested on Windows with the Steam version of the game. **Steam Deck / Linux / Proton is untested.**
+- The cheat panel clicks may also reach the game underneath it, and typing in its text boxes may trigger game hotkeys. Minimize it while playing.
 
-## Known risks (not yet verified in game)
-- Clicks on the panel may also reach the game underneath (IMGUI doesn't block the game's own UI).
-- Typing in text boxes may trigger the game's keyboard shortcuts.
-- The plugin calls `QFSW.QC.ConsoleCommands` directly (verified from the game's code, untested at runtime).
+## Feedback (this is an early release!)
 
-## For developers / research
-- `docs/COMMANDS.md`: every console command with arguments (verified from the game's code).
-- `docs/FINDINGS.md`: how perk points, dialogue requirements, sanity and trading actually work.
-- `tools/inspect_install.py`, `tools/decompile_key_classes.py`: local, read-only inspection helpers. Their output goes to `inspection/`, which is git-ignored. **Never commit game files or decompiled code.**
+Bug reports and ideas are very welcome: open an **Issue** on this repository (the form tells you what to include). The most useful thing to attach is **`BepInEx\LogOutput.log`** from the game folder. Please mention your difficulty/start and whether you changed any settings.
+
+Planned: time-of-day changes within the same day, a "who sells what" trader finder, digging for bait, and bushes that grow beyond their default size when cared for.
+
+## Credits and license
+
+Made by DeliciousMeatPop. Released under the MIT license (see `LICENSE`). Built on [BepInEx](https://github.com/BepInEx/BepInEx) and Harmony. DreadMist belongs to its developer; this project contains none of its files.

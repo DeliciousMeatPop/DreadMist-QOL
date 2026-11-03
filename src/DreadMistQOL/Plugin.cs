@@ -17,7 +17,7 @@ namespace DreadMistQOL
     {
         public const string Guid = "com.deliciousmeatpop.dreadmistqol";
         public const string Name = "DreadMist QOL";
-        public const string Version = "0.1.0";
+        public const string Version = "0.2.0";
 
         internal static ManualLogSource Log;
         internal static ConfigEntry<bool> EnableCheatPanel;
