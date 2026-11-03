@@ -1,4 +1,5 @@
 # DreadMist QOL
+<img width="1672" height="941" alt="image" src="https://github.com/user-attachments/assets/e45895ee-9fb0-4607-a39a-c9d0ada992a5" />
 
 A quality-of-life mod for **DreadMist** (the single-player sandbox RPG by Michael Shoots, Steam app 2285190 - not Dreadmyst).
 
