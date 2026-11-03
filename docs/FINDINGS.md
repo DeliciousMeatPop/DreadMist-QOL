@@ -103,3 +103,4 @@ Run `tools/decompile_key_classes.py` and send `inspection/decompiled_selected.zi
 | Beggar | 0 | Normal | -1411.6, 1552.6 | inventory `Player_Beggar`; no sanity override (default 100) |
 | Merchant | 10 | Easy | -1522.5, 1368.0 | inventory `Player_Merchant`; Bartering 30 |
 | Shipwrecked | 100 | Brutal | -1579.1, 549.5 | no inventory; 3 broken bones, low blood/stamina, **starts at Sanity 38 (already "Confused")** |
+- USER-CONFIRMED (partly): the start is chosen by the difficulty picked at new game (Easy=Merchant, Normal=Beggar, Brutal=Shipwrecked). The user chose Normal and got Beggar. The three starts are not separate menu options.
