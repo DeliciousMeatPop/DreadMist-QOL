@@ -30,6 +30,7 @@ namespace DreadMistQOL
         internal static ConfigEntry<bool> ProtectLastHarvest;
         internal static ConfigEntry<RevealModifier> ForageOverrideKey;
         internal static ConfigEntry<int> RegrowDays;
+        internal static ConfigEntry<bool> RespawnOnlyWhenDue;
         internal static ConfigEntry<RevealModifier> DialogueRevealKey;
 
         internal enum RevealModifier { Shift, Control, Alt }
@@ -93,6 +94,11 @@ namespace DreadMistQOL
             ShowSanityDetails = Config.Bind(
                 "Sanity", "ShowBreakdown", true,
                 "Adds a 'Sanity details' section to the stats window: stage thresholds, constant drain and what reduces it, and effects raising or lowering sanity.");
+
+            RespawnOnlyWhenDue = Config.Bind(
+                "Foraging", "RespawnOnlyWhenDue", true,
+                "The game resets harvested bushes/flowers whenever an area reloads (for example after you walk far away and come back), " +
+                "even if no game time has passed. When true, they only reset once their normal respawn time has really passed.");
 
             _cheats = new CheatPanel();
             var harmony = new Harmony(Guid);

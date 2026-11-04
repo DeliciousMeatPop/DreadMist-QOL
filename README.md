@@ -61,12 +61,14 @@ Start the game once, then edit `BepInEx\config\com.deliciousmeatpop.dreadmistqol
 | `Foraging` > `ProtectLastHarvest` | `true` | Stop at 1 harvest left |
 | `Foraging` > `OverrideKey` | `Control` | Key to harvest the protected last one |
 | `Foraging` > `RegrowDays` | `2` | Days per regrown harvest. `0` turns regrowth off |
+| `Foraging` > `RespawnOnlyWhenDue` | `true` | Stops the game resetting harvested plants just because you walked away and came back; they reset only when their normal respawn time has passed |
 | `Tweaks` > `GoldWeighsNothing` | `false` | Coins weigh 0 |
 
 ## Good to know
 
 - **Perk points are per skill.** Each attribute and skill has its own pool: 1 point for every 5 levels (max 20 each), and every perk level costs 1 point. A skill at level 4 has 0 points, so nothing can be bought yet.
 - **"Unavailable" in dialogue** means the game itself marked a requirement red. Choices whose requirements the developer chose to hide can't be detected and stay visible.
+- **Regrowth only counts while a plant is nearby.** Time spent far away does not count toward the 2-day regrowth yet (planned fix).
 - **Game updates** can rename internal parts of the game. Each feature installs separately, so one breaking should not stop the others; errors are written to the log.
 - Tested on Windows with the Steam version of the game. **Steam Deck / Linux / Proton is untested.**
 - The cheat panel clicks may also reach the game underneath it, and typing in its text boxes may trigger game hotkeys. Minimize it while playing.

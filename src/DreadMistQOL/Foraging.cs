@@ -31,6 +31,7 @@ namespace DreadMistQOL
         {
             harmony.PatchAll(typeof(CanHarvestPatch));
             harmony.PatchAll(typeof(HoverPatch));
+            harmony.PatchAll(typeof(RespawnGuardPatch));
             Plugin.Log.LogInfo("Foraging rules installed (protect last harvest: " + Plugin.ProtectLastHarvest.Value +
                                ", regrow every " + Plugin.RegrowDays.Value + " day(s)).");
         }
@@ -89,6 +90,47 @@ namespace DreadMistQOL
                     }
                 }
                 catch (Exception e) { Plugin.Log.LogError("Foraging (hover): " + e); }
+            }
+        }
+
+        // ------------------------------------------------------------------ early-respawn guard
+
+        private static int _blockedLogged;
+
+        /// <summary>
+        /// The game's CheckForRespawn (run when an area reloads, e.g. after you walk far away and come back) resets any
+        /// plant that has been harvested, whether or not its RespawnTime has passed. This lets it run only once the
+        /// respawn time has really elapsed on the game clock. Foraged plants only.
+        /// </summary>
+        [HarmonyPatch(typeof(InteractableResourceDestructibleController), "CheckForRespawn")]
+        private static class RespawnGuardPatch
+        {
+            private static bool Prefix(InteractableResourceDestructibleController __instance)
+            {
+                try
+                {
+                    if (!Plugin.RespawnOnlyWhenDue.Value || !IsForagedPlant(__instance) || !GameApi.HasClock) return true;
+
+                    float last = __instance.RespawnTimeCheck; // +infinity until the plant is first harvested
+                    bool untouched = __instance.HarvestCurrent == 0 && float.IsPositiveInfinity(last);
+                    if (untouched) return true;
+
+                    bool due = !float.IsPositiveInfinity(last) && GameApi.GameTime >= last + __instance.RespawnTime;
+                    if (due) return true;
+
+                    if (_blockedLogged < 15)
+                    {
+                        _blockedLogged++;
+                        Plugin.Log.LogInfo("Foraging: stopped an early respawn of '" + __instance.name + "' (" +
+                                           __instance.HarvestCurrent + "/" + __instance.HarvestLimit + " used; respawn not due yet).");
+                    }
+                    return false; // skip the game's respawn for now
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.LogError("Foraging (respawn guard): " + e);
+                    return true;
+                }
             }
         }
 
